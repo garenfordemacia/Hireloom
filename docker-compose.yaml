@@ -1,0 +1,25 @@
+services:
+  career-ops:
+    build: .
+    container_name: career-ops
+    volumes:
+      # Mount the full project directory so changes persist
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      # Kimi (Moonshot AI) API key — OpenAI-compatible endpoint
+      KIMI_API_KEY: ${KIMI_API_KEY}
+      KIMI_BASE_URL: ${KIMI_BASE_URL:-https://api.moonshot.cn/v1}
+      # Ollama (Gemma 4) — connects to host machine Ollama instance
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host-docker-internal:11434}
+      GEMMA_MODEL: ${GEMMA_MODEL:-gemma4:latest}
+      # Playwright
+      PLAYWRIGHT_BROWSERS_PATH: /usr/bin
+      PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH: /usr/bin/chromium
+    extra_hosts:
+      # Allow container to reach host machine's Ollama
+      - "host-docker-internal:host-gateway"
+    stdin_open: true
+    tty: true
+    command: /bin/bash
