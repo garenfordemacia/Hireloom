@@ -4,6 +4,131 @@ All notable changes to JobSeeker · Career-Ops are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] — 2026-05-06
+
+The "WOW + fork-friendly" release. Career-Ops jumps from 1.3 → 1.7 by
+backporting four minor versions of upstream features in one pass:
+LaTeX CV export, Gemini evaluator, full-featured wizard schema,
+governance docs, and 7 README translations. Plus 5 quality fixes
+surfaced by a fresh-clone simulation.
+
+### Added
+
+#### LaTeX CV pipeline (was: 1.7 upstream feature)
+- `generate-latex.mjs` — validates a generated `.tex` resume against the
+  required sections (Education, Work Experience, Personal Projects,
+  Technical Skills) and required commands (`\resumeSubheading`,
+  `\resumeItem`, `\resumeProjectHeading`), then compiles via `tectonic`
+  (preferred) or `pdflatex`. Exits non-zero on schema errors.
+- `templates/cv-template.tex` — Jake-Gutierrez-style ATS-friendly LaTeX CV
+  template with `\resumeSubheading` / `\resumeItem` macros.
+- `modes/latex.md` — agent mode that produces a `.tex` from `cv.md`
+  conforming to the template.
+- `npm run latex` script.
+
+#### Gemini-powered evaluator
+- `gemini-eval.mjs` — free-tier Claude alternative. Reads `modes/oferta.md`
+  + `modes/_shared.md` + `cv.md` and evaluates a JD via `gemini-2.0-flash`.
+  Requires `GEMINI_API_KEY` (free tier has 15 RPM / 1M tokens/day).
+- `npm run eval:gemini` script.
+- `GEMINI.md` — Gemini Code Assist contributor guide.
+
+#### Profile schema (ApplyPilot-inspired)
+Three sections every serious job-search tool eventually needs:
+- `work_authorization` (legally_authorized, sponsorship, permit_type) —
+  every US/CA application asks these two questions
+- `eeo_voluntary` (gender, race_ethnicity, veteran_status,
+  disability_status) — defaulted to "Decline to self-identify" so
+  EEO renderers always have a valid value
+- `resume_facts` (preserved_companies, preserved_projects,
+  preserved_school, real_metrics) — the immutable identity guard.
+  Tailoring/cover-letter modes MUST treat these as ground truth;
+  prevents AI from inventing companies, projects, or metrics.
+
+`dashboard-web/lib/onboard.mjs` serializeProfileYaml emits all three
+with sensible defaults; `validateOnboardPayload` accepts/validates all
+three (skip-friendly). 11 new unit tests covering each path + edges.
+E2E verified: POST /api/onboard/finalize round-trip persists all three
+sections to `config/profile.yml` correctly.
+
+#### Restored upstream scripts (CLAUDE.md referenced these but local was missing them)
+- `scan.mjs` — zero-token portal scanner (Greenhouse/Ashby/Lever direct
+  API hits, ~0 LLM cost). Verified pulls 10+ live Anthropic listings.
+- `check-liveness.mjs` + `liveness-core.mjs` — verifies postings still
+  accept applicants (expired signals win over generic Apply text).
+- `analyze-patterns.mjs` — rejection-pattern analyzer (JSON output for CI).
+- `followup-cadence.mjs` — follow-up cadence calculator (JSON output).
+- `doctor.mjs` — JSON-output system diagnostic (parallel to
+  `install.sh --doctor`; CI-friendly).
+- `npm run scan / liveness / patterns / followup / doctor` scripts.
+
+#### Modes (3 missing locally)
+- `modes/patterns.md` — wires up `analyze-patterns.mjs`
+- `modes/followup.md` — wires up `followup-cadence.mjs`
+- `modes/interview-prep.md` — company-specific interview intel mode
+
+#### Governance + community
+- `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1 with enforcement
+- `GOVERNANCE.md` — BDFL model with contributor ladder
+- `SECURITY.md` — private vulnerability reporting
+- `SUPPORT.md` — help-question routing (Discord/Discussions, not issues)
+- `TRADEMARK.md` — naming + logo usage policy
+- `LEGAL_DISCLAIMER.md` — auto-apply legal coverage
+- `CONTRIBUTORS.md` — recognition policy
+
+#### Internationalization
+- `README.cn.md` (zh-CN), `README.es.md` (Spanish), `README.ja.md`
+  (Japanese), `README.ko-KR.md` (Korean), `README.pt-BR.md` (Brazilian
+  Portuguese), `README.ru.md` (Russian), `README.zh-TW.md` (Traditional
+  Chinese). 7 new languages.
+
+#### Nix devshell
+- `flake.nix` + `flake.lock` — Nix-flake devshell with Playwright support.
+  `nix develop` brings up Node 22 + Chromium + all build deps reproducibly.
+
+### Fixed
+
+- **Finalize ENOENT**: `dashboard-web/server.mjs` now `mkdir -p`'s
+  CONFIG_DIR before writing `profile.yml`. Fresh tmpfs / custom
+  CONFIG_DIR no longer fail finalize with a generic "finalize failed".
+- **Back→Continue blanks step-2**: when a user goes back to step 1 and
+  re-extracts, manual edits in step 2 are preserved instead of being
+  overwritten by an empty extraction.
+- **Generic finalize errors**: now maps `err.code` to specific public
+  messages (ENOENT/EACCES/EROFS/ENOSPC) and returns 500 (was 400).
+- **Windows `install.sh --uninstall` didn't kill the local server**:
+  `pkill -f` doesn't exist on Git Bash. Added `ps -ef | grep | awk |
+  kill` fallback. Verified end-to-end on Git Bash.
+- **Privacy hardening**: 4 PII leaks repaired
+  (`docs/product-strategy.md` untracked, `MISTAKES.md` placeholders,
+  `tests/onboard.test.mjs` "Tony Walteur" → "Jane Doe", comp regex
+  generalized in `dashboard-web/server.mjs:188`).
+- **`interview-prep/story-bank.md` was tracked** — accumulates personal
+  STAR+R stories. Gitignored, extracted template to
+  `templates/story-bank.template.md`, install.sh `ensure_user_files()`
+  seeds it on fresh install.
+
+### Tests
+
+- 140 tests across 12 suites (was 116, then 122, now 140)
+- 11 new tests for the ApplyPilot-inspired schema sections
+- 6 new integration tests for `/api/health`
+
+### Migration notes
+
+If you were on 1.3 with a working profile.yml:
+
+1. `git pull` the latest.
+2. **Your profile.yml is forward-compatible** — the new sections are
+   optional. Re-running the wizard will append `work_authorization`,
+   `eeo_voluntary`, and `resume_facts` blocks, but your existing
+   candidate/target_roles/narrative/compensation are preserved.
+3. The wizard auto-creates a `profile.yml.bak.{timestamp}` snapshot
+   before any rewrite, so rollback is one `cp` away.
+4. No data migration required for `data/`, `reports/`, or `cv.md`.
+
+[1.7.0]: https://github.com/santifer/career-ops/releases/tag/v1.7.0
+
 ## [1.3.0] — 2026-05-05
 
 The "easy install + amazing onboarding" release. Career-Ops is now installable

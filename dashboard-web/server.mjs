@@ -6983,7 +6983,7 @@ GMAIL_REDIRECT_URI=${redirect}</pre>
     res.end(JSON.stringify({
       ok: true,
       uptime: Math.round(process.uptime()),
-      version: '1.3.0',
+      version: '1.7.0',
       now: new Date().toISOString(),
     }));
     return;
