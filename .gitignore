@@ -86,6 +86,10 @@ data/high-paying-queue.json
 data/high-paying-queue.md
 data/apply-queue.md
 data/pipeline.md.bak
+# Structured error log (rotates to errors.log.1; both contain stack traces
+# with absolute paths — never commit)
+data/errors.log
+data/errors.log.1
 
 # Worktrees + agent scratch
 .claude/worktrees/
