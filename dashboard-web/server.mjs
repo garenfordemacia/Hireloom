@@ -2318,6 +2318,9 @@ const HTML = /* html */ `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hireloom — Career Atelier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2388,13 +2391,15 @@ const HTML = /* html */ `<!DOCTYPE html>
       --purple:  #8a6fa6; --purple-bg: rgba(138,111,166,.12);  /* aubergine */
       --gray:    rgba(220,200,185,.30); --gray-bg: rgba(201,168,106,.05);
 
-      /* ── Radius scale (Apple uses 6/10/16/22 — multiples of 2 + 4) ── */
-      --r-xs: 6px;
-      --r-sm: 10px;
-      --r-md: 14px;
-      --r-lg: 20px;
-      --r-xl: 26px;
-      --r-pill: 999px;
+      /* ── Radius scale (Linear-tight — no overrounded corners) ──
+         Skill ban: cards >12px, buttons >8px, "pills on everything".
+         All component radii cap here. */
+      --r-xs: 4px;
+      --r-sm: 6px;
+      --r-md: 8px;
+      --r-lg: 10px;
+      --r-xl: 12px;
+      --r-pill: 999px;       /* reserved for genuine pills only (status dots) */
 
       /* ── Spacing — 4px base, 8px most-used ─────────────────────────── */
       --space-1: 4px;
@@ -2406,34 +2411,35 @@ const HTML = /* html */ `<!DOCTYPE html>
       --space-7: 32px;
       --space-8: 40px;
 
-      /* ── Typography ───────────────────────────────────────────────── */
-      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
-      --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-      /* Display serif — used for the wordmark, page titles, and any
-         "luxury" surface that benefits from contrast against the body
-         sans. Falls back through native serifs across macOS / iOS /
-         Windows / Linux (no web-font load → no FOUT). */
-      --font-display: "New York", "Big Caslon", "Hoefler Text", "Cormorant Garamond", "Playfair Display", Georgia, "Times New Roman", serif;
-      /* Apple type scale (display | body) */
-      --t-display:    34px;
-      --t-title-1:    28px;
-      --t-title-2:    22px;
-      --t-title-3:    19px;
-      --t-headline:   17px;
-      --t-body:       15px;
-      --t-callout:    14px;
-      --t-subhead:    13px;
+      /* ── Typography ─────────────────────────────────────────────────
+         DM Sans (body) — distinctive but professional, NOT Inter/Roboto.
+         Fraunces (display) — variable serif with optical-size + soft
+         axis; reads as proper letterpress at large sizes. JetBrains
+         Mono for monospace surfaces. All loaded via <link rel="preconnect">
+         + Google Fonts in <head>. System fallbacks listed only as the
+         last resort while the webfont loads. */
+      --font: "DM Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, monospace;
+      --font-display: "Fraunces", "Big Caslon", "Hoefler Text", Georgia, "Times New Roman", serif;
+      /* Modular type scale — 14px base, 1.18 ratio. Restraint over drama. */
+      --t-display:    32px;
+      --t-title-1:    24px;
+      --t-title-2:    20px;
+      --t-title-3:    17px;
+      --t-headline:   15px;
+      --t-body:       14px;
+      --t-callout:    13px;
+      --t-subhead:    12px;
       --t-footnote:   12px;
       --t-caption:    11px;
 
-      /* ── Elevation — soft, color-matched (no harsh blacks) ───────── */
-      --shadow-1: 0 1px 2px rgba(0,0,0,.18);
-      --shadow-2: 0 2px 8px rgba(0,0,0,.22), 0 1px 2px rgba(0,0,0,.16);
-      --shadow-3: 0 8px 24px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.18);
-      --shadow-4: 0 16px 48px rgba(0,0,0,.40), 0 4px 12px rgba(0,0,0,.20);
-      --shadow-glow-accent: 0 0 0 1px rgba(201,168,106,.20), 0 8px 28px rgba(201,168,106,.18);
-
-      /* Legacy alias retained for older selectors that reference these */
+      /* ── Elevation — Linear-restrained. Anti-slop ban: no dramatic
+         shadows, no colored shadows, no exceeding 0 8px 24px. */
+      --shadow-1: 0 1px 2px rgba(0,0,0,.20);
+      --shadow-2: 0 2px 6px rgba(0,0,0,.22);
+      --shadow-3: 0 4px 12px rgba(0,0,0,.28);
+      --shadow-4: 0 8px 24px rgba(0,0,0,.32);
+      --shadow-glow-accent: 0 0 0 1px rgba(201,168,106,.18);
       --shadow-sm: var(--shadow-1);
       --shadow-md: var(--shadow-2);
       --shadow-lg: var(--shadow-3);
@@ -2594,79 +2600,48 @@ const HTML = /* html */ `<!DOCTYPE html>
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Header ── liquid glass (visionOS-grade) */
+    /* ── Header ── Linear-clean: solid surface, single hairline. */
     .header {
-      background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
-      backdrop-filter: saturate(220%) blur(36px);
-      -webkit-backdrop-filter: saturate(220%) blur(36px);
-      border-bottom: .5px solid rgba(255,255,255,.12);
-      box-shadow:
-        inset 0 .5px 0 rgba(255,255,255,.22),
-        inset 0 -1px 0 rgba(0,0,0,.22),
-        0 8px 32px rgba(0,0,0,.30);
-      padding: 0 var(--space-5);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--separator2);
+      padding: 0 var(--space-6);
       height: 56px;
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--space-4);
       position: sticky;
       top: 0;
       z-index: 200;
     }
-    /* ── Hireloom wordmark — display serif over body sans, tight tracking.
-       (Replaces the old sans-serif "JobSeeker" wordmark — serif gives the
-       same visual weight at smaller size and reads as set in lead, not
-       generated.) */
+    /* ── Hireloom wordmark — Fraunces 600, optical-size 9pt, soft 100.
+       Smaller + more functional than the previous 20px coin-and-pendant
+       treatment. Reads as a logotype, not a brand statement. */
     .logo {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: 10px;
       font-family: var(--font-display);
       font-weight: 600;
-      font-size: 20px;
-      letter-spacing: .005em;
+      font-size: 18px;
+      font-variation-settings: "opsz" 14, "SOFT" 50;
+      letter-spacing: -.005em;
+      color: var(--text);
     }
 
-    /* ── Brand seal — oxblood medallion stamped with a champagne "H".
-         Round (coin/wax-seal) instead of square (chiclet/app icon).
-         Two-stop oxblood gradient with a faint cream highlight at NW
-         to suggest light catching a polished cabochon. */
+    /* ── Brand seal — solid oxblood circle, no breathing, no glow.
+       Functional indicator at 24px (same as a favicon), not a hero. */
     .logo-mark {
-      width: 30px; height: 30px;
-      background:
-        radial-gradient(circle at 30% 25%, rgba(255,235,210,.22), transparent 58%),
-        linear-gradient(135deg, #8a1a2e 0%, #a8253a 48%, #7a1424 100%);
+      width: 24px; height: 24px;
+      background: linear-gradient(180deg, #a8253a 0%, #7a1424 100%);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-family: var(--font-display);
-      font-size: 17px;
+      font-size: 13px;
       font-weight: 600;
-      color: rgba(245,220,190,.96);   /* warm cream — reads as engraved */
+      color: rgba(245,220,190,.98);
+      font-variation-settings: "opsz" 9;
       letter-spacing: -.02em;
-      box-shadow:
-        inset 0 1px 0 rgba(255,235,210,.18),
-        inset 0 -1px 0 rgba(0,0,0,.32),
-        0 4px 14px rgba(122,20,36,.45),
-        0 0 22px rgba(201,168,106,.08);
-      animation: logo-breathe 6s ease-in-out infinite;
-    }
-    .logo-mark > .logo-glyph {
-      /* margin shim — serif H sits a hair below visual centre */
-      transform: translateY(-1px);
-      text-shadow: 0 1px 0 rgba(0,0,0,.22);
-    }
-    /* Slow, subtle breathe — the seal warming, not throbbing. */
-    @keyframes logo-breathe {
-      0%,100% { box-shadow:
-        inset 0 1px 0 rgba(255,235,210,.18),
-        inset 0 -1px 0 rgba(0,0,0,.32),
-        0 4px 14px rgba(122,20,36,.45),
-        0 0 22px rgba(201,168,106,.08); }
-      50%     { box-shadow:
-        inset 0 1px 0 rgba(255,235,210,.22),
-        inset 0 -1px 0 rgba(0,0,0,.32),
-        0 6px 20px rgba(122,20,36,.55),
-        0 0 32px rgba(201,168,106,.18); }
+      flex-shrink: 0;
     }
     .header-spacer { flex: 1; }
     .header-actions {
@@ -2678,44 +2653,39 @@ const HTML = /* html */ `<!DOCTYPE html>
       letter-spacing: -.005em;
       font-variant-numeric: tabular-nums;
     }
-    /* ── Buttons — proper Apple hierarchy ─────────────────────────── */
+    /* ── Buttons — Linear-clean. No transforms, no springs, no glass. */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       gap: 6px;
-      padding: 7px 14px;
+      padding: 7px 12px;
       min-height: 32px;
-      font-size: var(--t-subhead); font-family: var(--font); font-weight: 590;
-      letter-spacing: -.005em;
+      font-size: var(--t-subhead); font-family: var(--font); font-weight: 500;
+      letter-spacing: -.003em;
       border-radius: var(--r-sm);
-      border: .5px solid transparent;
+      border: 1px solid transparent;
       cursor: pointer;
-      transition: background var(--dur-fast) var(--ease-out),
-                  transform var(--dur-fast) var(--ease-spring),
-                  box-shadow var(--dur-fast) var(--ease-out),
-                  color var(--dur-fast) var(--ease-out);
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
       white-space: nowrap;
       text-decoration: none;
       user-select: none;
-      -webkit-tap-highlight-color: transparent;
     }
     .btn:focus-visible {
       outline: none;
       box-shadow: 0 0 0 3px var(--accent-ring);
     }
-    .btn:active { transform: scale(.97); }
+    .btn:active { background-color: var(--surface3); }
     .btn:disabled, .btn[disabled] {
       opacity: .42; cursor: not-allowed; pointer-events: none;
     }
 
-    /* Ghost — translucent default with liquid glass specular */
+    /* Ghost — solid surface with hairline border, no glass. */
     .btn-ghost {
-      background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.05) 100%);
+      background: var(--surface);
       color: var(--text);
-      border-color: rgba(255,255,255,.12);
-      box-shadow: inset 0 .5px 0 rgba(255,255,255,.12);
+      border-color: var(--separator2);
     }
-    .btn-ghost:hover { background: linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.08) 100%); border-color: rgba(255,255,255,.16); }
-    .btn-ghost:active { background: linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.03) 100%); transform: scale(.97); }
+    .btn-ghost:hover { background: var(--surface2); border-color: var(--hairline-2); }
+    .btn-ghost:active { background: var(--surface3); }
 
     /* Primary — accent fill */
     .btn-primary {
@@ -2757,29 +2727,20 @@ const HTML = /* html */ `<!DOCTYPE html>
       min-width: 38px; padding: 6px 10px;
       font-size: 16px; line-height: 1;
     }
-    .btn-theme #theme-icon { display: inline-block; transition: transform var(--dur-med) var(--ease-spring); }
-    .btn-theme:hover #theme-icon { transform: rotate(15deg); }
+    .btn-theme #theme-icon { display: inline-block; transition: opacity 120ms ease; }
+    .btn-theme:hover #theme-icon { opacity: .7; }
 
-    /* Apply — Hireloom's signature CTA. Oxblood seal with a warm
-       champagne edge sheen. The orange "act now" gradient was loud;
-       this reads as "this is the deliberate move," matching the
-       heritage palette. */
+    /* Primary CTA — solid oxblood, no gradient, no glow. The "buy"
+       button at Stripe is one solid color with a hairline border, not
+       a billboard. */
     .btn-apply-batch {
-      background:
-        radial-gradient(circle at 30% 0%, rgba(255,235,210,.18), transparent 55%),
-        linear-gradient(135deg, #a8253a 0%, #7a1424 100%);
+      background: var(--accent);
       color: rgba(245,220,190,.98);
-      font-weight: 600;
-      letter-spacing: -.005em;
-      border-color: rgba(0,0,0,.18);
-      box-shadow:
-        inset 0 .5px 0 rgba(255,235,210,.22),
-        inset 0 -1px 0 rgba(0,0,0,.32),
-        0 4px 14px rgba(122,20,36,.32),
-        0 0 18px rgba(201,168,106,.08);
+      font-weight: 500;
+      border-color: rgba(0,0,0,.20);
     }
-    .btn-apply-batch:hover  { filter: brightness(1.06) saturate(1.04); }
-    .btn-apply-batch:active { filter: brightness(.94); }
+    .btn-apply-batch:hover  { background: #b9304a; }
+    .btn-apply-batch:active { background: #921f33; }
 
     /* ── Apply modal ── */
     .modal-overlay {
@@ -3018,67 +2979,10 @@ const HTML = /* html */ `<!DOCTYPE html>
     .comp-tier.high { background: var(--green); }
     .comp-tier.unknown { background: var(--text-ter); }
 
-    /* ── Today's Activity panel ── */
-    .today-panel {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 18px;
-      padding: 14px 16px;
-      background: linear-gradient(135deg, rgba(110,155,91,.06), rgba(107,140,175,.04));
-      border: .5px solid var(--separator2);
-      border-radius: var(--r-md);
-      position: relative;
-      overflow: hidden;
-    }
-    .today-panel::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--green), var(--accent));
-    }
-    .today-cell {
-      display: flex; flex-direction: column; gap: 2px;
-      padding: 0 6px;
-      border-right: .5px solid var(--separator);
-    }
-    .today-cell:last-child { border-right: none; }
-    .today-label {
-      font-size: 10px; font-weight: 600;
-      color: var(--text-ter);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-    .today-value {
-      font-size: 22px; font-weight: 700;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-      color: var(--text);
-      letter-spacing: -.02em;
-    }
-    .today-value.green   { color: var(--green); }
-    .today-value.blue    { color: var(--link); }
-    .today-value.yellow  { color: var(--yellow); }
-    .today-value.orange  { color: var(--orange); }
-    .today-sub {
-      font-size: 11px; color: var(--text-sec);
-      margin-top: 2px;
-    }
-    .today-header {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 10px;
-      grid-column: 1 / -1;
-    }
-    .today-title {
-      font-size: 12px; font-weight: 700;
-      color: var(--text-sec);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-    .today-date {
-      font-size: 11px; color: var(--text-ter);
-      font-variant-numeric: tabular-nums;
-      margin-left: auto;
-    }
+    /* (today-panel + today-cell + today-* selectors removed in the
+       Linear-clean redesign — the page header replaced them. The
+       backing JS still updates hidden #today-* spans for script
+       compat, but no visual treatment is needed.) */
 
     /* ── Money filter pill ── tinted but not gaudy */
     .filter-pill.money {
@@ -3103,195 +3007,101 @@ const HTML = /* html */ `<!DOCTYPE html>
     }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 
-    /* ── Layout ── */
+    /* ── Layout — Linear-style: 1fr content + 280px sidebar. */
     .layout {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 340px;
+      grid-template-columns: minmax(0, 1fr) 280px;
       gap: 0;
-      min-height: calc(100vh - 52px);
-      max-width: 1680px;
+      min-height: calc(100vh - 56px);
+      max-width: 1440px;
       margin: 0 auto;
     }
-    .main { padding: 24px; min-width: 0; }
+    .main { padding: 0 32px 32px; min-width: 0; }
     .sidebar {
-      border-left: .5px solid var(--separator);
+      border-left: 1px solid var(--separator2);
       display: flex; flex-direction: column;
       min-width: 0;
+      padding: 8px 0;
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-left: none; border-top: 1px solid var(--separator2); }
     }
 
-    /* ── Stats grid ── */
+    /* ── Page header — Linear-style title row, NOT a hero. */
+    .page-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: var(--space-4);
+      padding: 28px 0 20px;
+      margin-bottom: var(--space-4);
+      border-bottom: 1px solid var(--separator2);
+    }
+    .page-title {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: var(--t-display);
+      font-variation-settings: "opsz" 48, "SOFT" 50;
+      letter-spacing: -.015em;
+      color: var(--text);
+    }
+    .page-subtitle {
+      font-size: var(--t-callout);
+      color: var(--text-ter);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Stat strip — 4 cells, NOT a 9-card grid. Functional density. */
     .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-      gap: var(--space-3);
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
       margin-bottom: var(--space-6);
-    }
-    /* Zero-state hero — shown only when no apps exist yet, replaces the
-       9-card grid that would otherwise be a wall of zeros. */
-    .stats-zero {
-      display: none;
-      margin-bottom: 24px;
-      padding: 24px 28px;
-      background:
-        radial-gradient(circle at 0% 0%, rgba(168,37,58,.07), transparent 42%),
-        radial-gradient(circle at 100% 100%, rgba(201,168,106,.06), transparent 42%),
-        var(--surface);
-      border: .5px solid var(--separator2);
+      background: var(--separator2);
+      border: 1px solid var(--separator2);
       border-radius: var(--r-md);
-      display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
-      position: relative;
       overflow: hidden;
     }
-    /* Heritage prismatic — oxblood/champagne/aubergine drifting in 22s
-       (slower than the previous tech-y 14s); the surface should feel
-       like waiting velvet, not a screensaver. */
-    .stats-zero::before {
-      content: '';
-      position: absolute;
-      inset: -50% -25%;
-      background: conic-gradient(
-        from 0deg at 50% 50%,
-        rgba(168,37,58,0)   0deg,
-        rgba(168,37,58,.10) 60deg,
-        rgba(138,111,166,.10) 140deg,
-        rgba(201,168,106,.12) 220deg,
-        rgba(110,155,91,.08) 300deg,
-        rgba(168,37,58,0)   360deg
-      );
-      animation: zero-conic 22s linear infinite;
-      pointer-events: none;
-      filter: blur(40px);
-      opacity: 0.55;
-    }
-    .stats-zero > * { position: relative; z-index: 1; }
-    @keyframes zero-conic {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .stats-zero::before { animation: none; }
-    }
-    .stats-zero[hidden] { display: none !important; }
-    /* Hireloom seal — large coin variant of the header monogram.
-       Rounded full circle, oxblood medallion, champagne-cream "H" set
-       in display serif. Slower 6s breathe to match the heritage cadence. */
-    .stats-zero-icon {
-      flex: 0 0 auto;
-      width: 52px; height: 52px;
-      background:
-        radial-gradient(circle at 30% 25%, rgba(255,235,210,.20), transparent 58%),
-        linear-gradient(135deg, #8a1a2e 0%, #a8253a 48%, #7a1424 100%);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display);
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -.02em;
-      color: rgba(245,220,190,.96);
-      text-shadow: 0 1px 0 rgba(0,0,0,.22);
-      box-shadow:
-        inset 0 1px 0 rgba(255,235,210,.18),
-        inset 0 -1px 0 rgba(0,0,0,.32),
-        0 6px 18px rgba(122,20,36,.40),
-        0 0 22px rgba(201,168,106,.10);
-      animation: zero-breathe 6s ease-in-out infinite;
-    }
-    @keyframes zero-breathe {
-      0%, 100% { transform: scale(1);    box-shadow:
-        inset 0 1px 0 rgba(255,235,210,.18),
-        inset 0 -1px 0 rgba(0,0,0,.32),
-        0 6px 18px rgba(122,20,36,.40),
-        0 0 22px rgba(201,168,106,.10); }
-      50%      { transform: scale(1.04); box-shadow:
-        inset 0 1px 0 rgba(255,235,210,.22),
-        inset 0 -1px 0 rgba(0,0,0,.32),
-        0 10px 26px rgba(122,20,36,.55),
-        0 0 32px rgba(201,168,106,.20); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .stats-zero-icon { animation: none; }
-    }
-    .stats-zero-body { flex: 1 1 220px; min-width: 0; }
-    .stats-zero-title { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
-    .stats-zero-sub { font-size: 13px; color: var(--text-sec); margin-top: 4px; line-height: 1.5; }
-    .stats-zero-sub code {
-      font-size: 12px; padding: 1px 6px; border-radius: 4px;
-      background: var(--surface3); color: var(--text);
-    }
-    .stats-zero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .stat-card {
-      background: linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.03) 100%);
-      backdrop-filter: blur(24px) saturate(160%);
-      -webkit-backdrop-filter: blur(24px) saturate(160%);
-      border-radius: var(--r-md);
-      padding: 14px 16px 16px;
-      position: relative;
-      overflow: hidden;
+      background: var(--bg);
+      padding: 16px 18px;
       cursor: pointer;
-      transition: background var(--dur-fast) var(--ease-out),
-                  transform var(--dur-fast) var(--ease-spring),
-                  box-shadow var(--dur-fast) var(--ease-out);
-      border: .5px solid rgba(255,255,255,.10);
-      box-shadow:
-        inset 0 .5px 0 rgba(255,255,255,.12),
-        inset 0 -1px 0 rgba(0,0,0,.15),
-        0 4px 16px rgba(0,0,0,.20),
-        0 1px 3px rgba(0,0,0,.12);
-      transform-style: preserve-3d;
-      animation: card-enter .6s cubic-bezier(.22,1,.36,1) both;
+      transition: background 120ms ease;
+      border: none;
+      display: flex; flex-direction: column; gap: 6px;
     }
-    .stat-card:nth-child(1) { animation-delay: .05s; }
-    .stat-card:nth-child(2) { animation-delay: .10s; }
-    .stat-card:nth-child(3) { animation-delay: .15s; }
-    .stat-card:nth-child(4) { animation-delay: .20s; }
-    .stat-card:nth-child(5) { animation-delay: .25s; }
-    .stat-card:nth-child(6) { animation-delay: .30s; }
-    .stat-card:nth-child(7) { animation-delay: .35s; }
-    .stat-card:nth-child(8) { animation-delay: .40s; }
-    .stat-card:nth-child(9) { animation-delay: .45s; }
-    @keyframes card-enter {
-      from { opacity: 0; transform: translateY(20px) scale(.96) rotateX(4deg); }
-      to   { opacity: 1; transform: translateY(0) scale(1) rotateX(0); }
-    }
-    .stat-card:hover {
-      background: linear-gradient(180deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.06) 100%);
-      transform: translateY(-3px) scale(1.01);
-      box-shadow:
-        inset 0 .5px 0 rgba(255,255,255,.16),
-        inset 0 -1px 0 rgba(0,0,0,.18),
-        0 12px 32px rgba(0,0,0,.28),
-        0 4px 8px rgba(0,0,0,.15);
-    }
-    .stat-card:active { transform: translateY(0) scale(.99); }
-    .stat-card.active {
-      background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
-      box-shadow:
-        inset 0 .5px 0 rgba(255,255,255,.14),
-        inset 0 -1px 0 rgba(0,0,0,.15),
-        0 8px 24px rgba(0,0,0,.22),
-        inset 0 0 0 1px color-mix(in srgb, var(--status-color, var(--accent)) 45%, transparent);
-    }
-    .stat-bar {
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg,
-        color-mix(in srgb, var(--status-color, var(--accent)) 70%, transparent),
-        var(--status-color, var(--accent)));
-      opacity: .85;
-    }
+    .stat-card:hover { background: var(--surface); }
+    .stat-card.active { background: var(--surface); box-shadow: inset 2px 0 0 var(--status-color, var(--accent-2)); }
+    .stat-card:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: -2px; }
+    .stat-bar { display: none; }
     .stat-label {
-      font-size: var(--t-caption); font-weight: 600;
+      font-size: var(--t-caption);
+      font-weight: 500;
       color: var(--text-ter);
+      letter-spacing: .04em;
       text-transform: uppercase;
-      letter-spacing: .045em;
-      margin-bottom: var(--space-2);
     }
     .stat-value {
-      font-size: 32px; font-weight: 700;
+      font-family: var(--font-display);
+      font-variation-settings: "opsz" 48;
+      font-size: 28px;
+      font-weight: 500;
       line-height: 1;
-      letter-spacing: -.025em;
+      letter-spacing: -.02em;
       color: var(--status-color, var(--text));
       font-variant-numeric: tabular-nums;
     }
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    /* Legacy zero-state hero — kept hidden, replaced by page-header.
+       (Selectors retained as no-ops so any leftover JS toggling them
+       doesn't error; the hero card is no longer rendered.) */
+    .stats-zero,
+    .stats-zero-icon,
+    .stats-zero-body,
+    .stats-zero-title,
+    .stats-zero-sub,
+    .stats-zero-actions { display: none !important; }
 
     /* ── Section ── */
     .section-header {
@@ -3339,47 +3149,54 @@ const HTML = /* html */ `<!DOCTYPE html>
       border-color: var(--link);
       box-shadow: 0 0 0 3px var(--accent-ring);
     }
+    /* ── Segmented control — single rounded container, hairline dividers.
+       Replaces the previous 6-pill scatter. Skill ban: no pill shapes
+       on everything. */
     .filter-pills {
-      display: flex; gap: 6px; flex-wrap: wrap;
+      display: inline-flex;
+      align-items: stretch;
+      background: var(--surface);
+      border: 1px solid var(--separator2);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      flex-wrap: wrap;
+      max-width: 100%;
     }
     .filter-pill {
-      padding: 6px 14px;
-      font-size: var(--t-footnote); font-weight: 590; font-family: var(--font);
-      border-radius: var(--r-pill);
-      border: .5px solid var(--hairline-2);
-      background: rgba(255,255,255,.04);
+      padding: 7px 12px;
+      font-size: var(--t-subhead);
+      font-weight: 500;
+      font-family: var(--font);
+      border: none;
+      border-right: 1px solid var(--separator2);
+      background: transparent;
       color: var(--text-sec);
       cursor: pointer;
-      transition: background var(--dur-fast) var(--ease-out),
-                  color var(--dur-fast) var(--ease-out),
-                  transform var(--dur-fast) var(--ease-spring),
-                  box-shadow var(--dur-fast) var(--ease-out);
-      letter-spacing: -.005em;
-      -webkit-tap-highlight-color: transparent;
+      transition: background 120ms ease, color 120ms ease;
+      letter-spacing: -.003em;
+      white-space: nowrap;
     }
-    .filter-pill:hover { background: rgba(255,255,255,.08); color: var(--text); }
-    .filter-pill:active { transform: scale(.96); }
-    .filter-pill:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+    .filter-pill:last-child { border-right: none; }
+    .filter-pill:hover { background: var(--surface-hover); color: var(--text); }
+    .filter-pill:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: -2px; }
     .filter-pill.active {
-      background: var(--accent-bg);
-      border-color: transparent;
-      color: var(--link);
-      box-shadow: inset 0 0 0 1px var(--accent-ring);
+      background: var(--bg-elevated);
+      color: var(--text);
+      box-shadow: inset 0 -2px 0 var(--accent-2);
+    }
+    /* The "money" filter keeps a small champagne tint to flag the only
+       monetary filter — but no longer a colored pill island. */
+    .filter-pill.money.active {
+      box-shadow: inset 0 -2px 0 var(--yellow);
+      color: var(--text);
     }
 
-    /* ── Table ── liquid glass surface */
+    /* ── Table — solid surface, single border, no glass. */
     .table-card {
-      background: linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.01) 100%);
-      backdrop-filter: blur(20px) saturate(140%);
-      -webkit-backdrop-filter: blur(20px) saturate(140%);
-      border-radius: var(--r-lg);
-      border: .5px solid rgba(255,255,255,.08);
+      background: var(--bg-elevated);
+      border-radius: var(--r-md);
+      border: 1px solid var(--separator2);
       overflow: hidden;
-      box-shadow:
-        inset 0 .5px 0 rgba(255,255,255,.08),
-        0 8px 24px rgba(0,0,0,.18),
-        0 2px 6px rgba(0,0,0,.10);
-      animation: card-enter .7s .2s cubic-bezier(.22,1,.36,1) both;
     }
     table { width: 100%; border-collapse: collapse; }
     thead th {
@@ -3389,15 +3206,13 @@ const HTML = /* html */ `<!DOCTYPE html>
       color: var(--text-ter);
       text-transform: uppercase;
       letter-spacing: .055em;
-      background: var(--mat-thick);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border-bottom: .5px solid var(--hairline);
+      background: var(--surface);
+      border-bottom: 1px solid var(--separator2);
       white-space: nowrap;
       cursor: pointer;
       user-select: none;
       position: sticky; top: 56px; z-index: 10;
-      transition: color var(--dur-fast) var(--ease-out);
+      transition: color 120ms ease;
     }
     thead th:hover { color: var(--text-sec); }
     thead th .sort-arrow { margin-left: 4px; opacity: .5; }
@@ -3444,7 +3259,6 @@ const HTML = /* html */ `<!DOCTYPE html>
       position: relative;
     }
     .status-badge:hover { filter: brightness(1.15); }
-    .status-badge:active { transform: scale(.96); }
     .status-badge::before {
       content: '';
       width: 5px; height: 5px; border-radius: 50%;
@@ -3516,37 +3330,43 @@ const HTML = /* html */ `<!DOCTYPE html>
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Sidebar ── */
+    /* ── Sidebar — clean panels, no dotted hairlines, refined headers. */
     .sidebar-section {
-      padding: var(--space-5) var(--space-4);
-      border-bottom: .5px solid var(--hairline);
+      padding: 18px 20px;
+      border-top: 1px solid var(--separator2);
     }
-    .sidebar-section:last-child { border-bottom: none; }
+    .sidebar-section:first-child { border-top: none; }
     .sidebar-title {
-      font-size: var(--t-caption); font-weight: 600;
-      text-transform: uppercase; letter-spacing: .055em;
+      font-size: var(--t-caption);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .065em;
       color: var(--text-ter);
-      margin-bottom: var(--space-3);
+      margin-bottom: 14px;
       display: flex; align-items: center; justify-content: space-between;
     }
     .sidebar-refresh {
-      background: rgba(201,168,106,.10);
-      border: none; color: var(--link);
-      font-size: var(--t-caption); font-family: var(--font); font-weight: 590;
+      background: transparent;
+      border: 1px solid var(--separator2);
+      color: var(--text-sec);
+      font-size: var(--t-caption);
+      font-family: var(--font);
+      font-weight: 500;
+      letter-spacing: .02em;
       cursor: pointer;
-      padding: 4px 10px;
-      border-radius: var(--r-pill);
-      transition: background var(--dur-fast) var(--ease-out);
+      padding: 3px 8px;
+      border-radius: var(--r-xs);
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+      text-transform: none;
     }
-    .sidebar-refresh:hover { background: rgba(201,168,106,.18); }
+    .sidebar-refresh:hover { background: var(--surface); color: var(--text); border-color: var(--hairline-2); }
 
-    /* ── Gmail connect card ── */
+    /* ── Gmail connect card — flat, NOT a centered pitch box. */
     .gmail-connect-card {
-      background: var(--surface2);
+      background: var(--surface);
+      border: 1px solid var(--separator2);
       border-radius: var(--r-md);
-      padding: var(--space-4);
-      text-align: center;
-      box-shadow: var(--edge-sheen);
+      padding: 14px;
     }
     .gmail-connect-card p { font-size: 12px; color: var(--text-sec); margin-bottom: 10px; line-height: 1.5; }
     .gmail-setup-notice {
@@ -4160,32 +3980,21 @@ const HTML = /* html */ `<!DOCTYPE html>
       pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
 
-    /* ── Apply banner ── */
+    /* ── Apply banner — flat surface, no double-radial gradient. */
     .apply-banner {
       display: none;
-      background:
-        radial-gradient(circle at 0% 50%, rgba(110,155,91,.14), transparent 50%),
-        radial-gradient(circle at 100% 50%, rgba(201,168,106,.10), transparent 50%),
-        var(--surface);
-      border: .5px solid rgba(110,155,91,.22);
-      border-radius: var(--r-lg);
-      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--separator2);
+      border-left: 3px solid var(--green);
+      border-radius: var(--r-md);
+      padding: 12px 16px;
       margin-bottom: var(--space-4);
       align-items: center; gap: var(--space-4);
-      box-shadow: var(--edge-sheen), var(--shadow-2);
     }
     .apply-banner.show { display: flex; }
-    .apply-banner-icon { font-size: 26px; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(110,155,91,.40)); }
     .apply-banner-text { flex: 1; min-width: 0; }
-    .apply-banner-title { font-size: var(--t-callout); font-weight: 700; color: var(--green); letter-spacing: -.01em; }
-    .apply-banner-sub { font-size: var(--t-footnote); color: var(--text-sec); margin-top: 3px; line-height: 1.45; }
-    .apply-banner .btn {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--green) 92%, white 8%), var(--green));
-      color: #0a1d12; font-weight: 700;
-      border: none; white-space: nowrap;
-      box-shadow: var(--edge-sheen), 0 2px 8px rgba(110,155,91,.30);
-    }
-    .apply-banner .btn:hover { filter: brightness(1.05); }
+    .apply-banner-title { font-size: var(--t-callout); font-weight: 600; color: var(--text); letter-spacing: -.005em; }
+    .apply-banner-sub { font-size: var(--t-footnote); color: var(--text-sec); margin-top: 2px; line-height: 1.45; }
 
     /* ── Follow-up list ── */
     .followup-item {
@@ -4346,108 +4155,58 @@ const HTML = /* html */ `<!DOCTYPE html>
       <span class="pipeline-bar-next" id="pipeline-next"></span>
     </div>
 
-    <!-- Today's Activity panel -->
-    <div class="today-panel" id="today-panel">
-      <div class="today-header">
-        <span class="today-title">Today's Activity</span>
-        <span class="today-date" id="today-date">—</span>
+    <!-- Page header — Linear-style, NOT a hero. -->
+    <header class="page-header">
+      <h1 class="page-title">Pipeline</h1>
+      <div class="page-subtitle" id="page-subtitle">
+        <span id="today-date">—</span>
       </div>
-      <div class="today-cell">
-        <span class="today-label">Applied today</span>
-        <span class="today-value blue" id="today-applied">0</span>
-        <span class="today-sub" id="today-applied-sub">submissions</span>
-      </div>
-      <div class="today-cell">
-        <span class="today-label">Pending in queue</span>
-        <span class="today-value orange" id="today-pending">0</span>
-        <span class="today-sub" id="today-pending-sub">URLs to evaluate</span>
-      </div>
-      <div class="today-cell">
-        <span class="today-label">Interviews</span>
-        <span class="today-value yellow" id="today-interviews">0</span>
-        <span class="today-sub" id="today-interviews-sub">scheduled</span>
-      </div>
-      <div class="today-cell">
-        <span class="today-label">High-paying ready</span>
-        <span class="today-value green" id="today-high-paying">0</span>
-        <span class="today-sub" id="today-high-paying-sub">$200K+ to apply</span>
-      </div>
-    </div>
+    </header>
 
-    <!-- Apply banner -->
+    <!-- Apply banner — only shows when 4.0+ roles are ready to apply -->
     <div class="apply-banner" id="apply-banner">
-      <div class="apply-banner-icon">🚀</div>
       <div class="apply-banner-text">
         <div class="apply-banner-title" id="apply-banner-title">17 roles ready to apply</div>
         <div class="apply-banner-sub" id="apply-banner-sub">Evaluated roles scoring 4.0+ — open them all in one click</div>
       </div>
-      <button class="btn" onclick="openApplyModal()">⚡ Apply Now</button>
+      <button class="btn btn-apply-batch" onclick="openApplyModal()">Apply now</button>
     </div>
 
-    <!-- Zero-state hero (shown when total apps = 0) -->
-    <div class="stats-zero" id="stats-zero" hidden>
-      <div class="stats-zero-icon">H</div>
-      <div class="stats-zero-body">
-        <div class="stats-zero-title" id="stats-zero-title">Welcome to Hireloom</div>
-        <div class="stats-zero-sub" id="stats-zero-sub">
-          Drop a job URL into <code>data/pipeline.md</code> or run <code>/career-ops scan</code> and we'll
-          weave it into your pipeline — scored, ranked, and queued for one-click apply.
-        </div>
-      </div>
-      <div class="stats-zero-actions">
-        <button class="btn btn-ghost" onclick="openOnboard()" title="Update profile / drop resume (⌘ ,)">⊕ Profile</button>
-        <button class="btn btn-apply-batch" onclick="window.scrollTo({top: document.querySelector('.table-card').offsetTop - 80, behavior: 'smooth'})">Show pipeline ↓</button>
-      </div>
-    </div>
-
-    <!-- Stats -->
+    <!-- Stats strip — 4 visible cells. Five hidden spans below preserve
+         backwards-compat for the JS that updates s-total / s-followup /
+         s-rejected / s-responded / s-evaluated; they no longer take
+         visual space (Skill ban: KPI grids as default dashboard). -->
     <div class="stats" id="stats-grid">
-      <div class="stat-card" style="--status-color:var(--text)" onclick="setFilter('all',this)" data-filter="all">
-        <div class="stat-bar"></div>
-        <div class="stat-label">Total</div>
-        <div class="stat-value" id="s-total">–</div>
+      <div class="stat-card" style="--status-color:var(--accent-2)" onclick="setFilter('pipeline',this)" data-filter="pipeline">
+        <div class="stat-label">In pipeline</div>
+        <div class="stat-value" id="s-pending">–</div>
       </div>
       <div class="stat-card" style="--status-color:var(--blue)" onclick="setFilter('applied',this)" data-filter="applied">
-        <div class="stat-bar"></div>
         <div class="stat-label">Applied</div>
         <div class="stat-value" id="s-applied">–</div>
       </div>
-      <div class="stat-card" style="--status-color:var(--cyan)" onclick="setFilter('responded',this)" data-filter="responded">
-        <div class="stat-bar"></div>
-        <div class="stat-label">Responded</div>
-        <div class="stat-value" id="s-responded">–</div>
-      </div>
       <div class="stat-card" style="--status-color:var(--yellow)" onclick="setFilter('interview',this)" data-filter="interview">
-        <div class="stat-bar"></div>
         <div class="stat-label">Interview</div>
         <div class="stat-value" id="s-interview">–</div>
       </div>
       <div class="stat-card" style="--status-color:var(--green)" onclick="setFilter('offer',this)" data-filter="offer">
-        <div class="stat-bar"></div>
         <div class="stat-label">Offer</div>
         <div class="stat-value" id="s-offer">–</div>
       </div>
-      <div class="stat-card" style="--status-color:var(--orange)" onclick="setFilter('followup',this)" data-filter="followup">
-        <div class="stat-bar"></div>
-        <div class="stat-label">Follow-up ⚡</div>
-        <div class="stat-value" id="s-followup">–</div>
-      </div>
-      <div class="stat-card" style="--status-color:rgba(255,255,255,.3)" onclick="setFilter('evaluated',this)" data-filter="evaluated">
-        <div class="stat-bar"></div>
-        <div class="stat-label">Evaluated</div>
-        <div class="stat-value" id="s-evaluated">–</div>
-      </div>
-      <div class="stat-card" style="--status-color:var(--red)" onclick="setFilter('rejected',this)" data-filter="rejected">
-        <div class="stat-bar"></div>
-        <div class="stat-label">Rejected</div>
-        <div class="stat-value" id="s-rejected">–</div>
-      </div>
-      <div class="stat-card" style="--status-color:var(--accent)" onclick="setFilter('pipeline',this)" data-filter="pipeline">
-        <div class="stat-bar"></div>
-        <div class="stat-label">In Pipeline</div>
-        <div class="stat-value" id="s-pending">–</div>
-      </div>
     </div>
+    <span hidden id="s-total">–</span>
+    <span hidden id="s-followup">–</span>
+    <span hidden id="s-rejected">–</span>
+    <span hidden id="s-responded">–</span>
+    <span hidden id="s-evaluated">–</span>
+    <span hidden id="today-applied">0</span>
+    <span hidden id="today-pending">0</span>
+    <span hidden id="today-interviews">0</span>
+    <span hidden id="today-high-paying">0</span>
+    <span hidden id="today-applied-sub"></span>
+    <span hidden id="today-pending-sub"></span>
+    <span hidden id="today-interviews-sub"></span>
+    <span hidden id="today-high-paying-sub"></span>
 
     <!-- Controls -->
     <div class="controls" id="controls">

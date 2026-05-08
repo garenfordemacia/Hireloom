@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Build a single-file executable of the Career-Ops launcher using Node SEA.
+# Build a single-file executable of the Hireloom launcher using Node SEA.
 #
-# Output: dist/career-ops      (Linux / macOS)
-#         dist/career-ops.exe  (Windows / Git-Bash)
+# Output: dist/hireloom      (Linux / macOS)
+#         dist/hireloom.exe  (Windows / Git-Bash)
 #
 # Pre-reqs: Node >= 22 (for stable SEA), npx access to esbuild + postject.
 # Optional: codesign on macOS, signtool on Windows.
@@ -55,7 +55,7 @@ node --experimental-sea-config "$SEA_CONFIG"
 echo "› Copying node host…"
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*)
-    OUT="$DIST/career-ops.exe"
+    OUT="$DIST/hireloom.exe"
     cp "$NODE_BIN" "$OUT"
     # Strip the embedded signature so postject can re-sign cleanly
     if command -v signtool >/dev/null 2>&1; then
@@ -63,12 +63,12 @@ case "$(uname -s)" in
     fi
     ;;
   Darwin)
-    OUT="$DIST/career-ops"
+    OUT="$DIST/hireloom"
     cp "$NODE_BIN" "$OUT"
     codesign --remove-signature "$OUT" 2>/dev/null || true
     ;;
   *)
-    OUT="$DIST/career-ops"
+    OUT="$DIST/hireloom"
     cp "$NODE_BIN" "$OUT"
     ;;
 esac

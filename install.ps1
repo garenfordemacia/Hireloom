@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Hireloom Windows installer (built on the career-ops engine).
+    Hireloom Windows installer.
 
 .DESCRIPTION
     Mirror of install.sh for native PowerShell on Windows.

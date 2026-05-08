@@ -11,8 +11,7 @@
 <p align="center">
   <em>Companies use AI to filter candidates. Hireloom gives candidates AI to <strong>choose</strong> companies.</em><br>
   Heritage-grade UX, oxblood palette, set-in-lead serif wordmark — and the ruthless senior-level
-  evaluation engine underneath. The atelier weaves; you decide.<br>
-  <em>Built on the open-source <a href="https://github.com/santifer/career-ops">career-ops</a> engine.</em>
+  evaluation engine underneath. The atelier weaves; you decide.
 </p>
 
 <p align="center">

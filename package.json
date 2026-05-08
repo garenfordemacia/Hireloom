@@ -1,13 +1,14 @@
 {
-  "name": "career-ops",
+  "name": "hireloom",
   "version": "1.7.0",
-  "description": "Hireloom — heritage-grade career atelier. AI-powered senior-level job search pipeline that scores, weaves, and queues offers — quietly, deliberately, never spammy.",
+  "description": "Hireloom — AI-powered career atelier. Scores, weaves, and queues senior-level job offers quietly and deliberately, never spammy.",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "main": "dashboard-web/server.mjs",
   "bin": {
+    "hireloom": "dashboard-web/server.mjs",
     "career-ops": "dashboard-web/server.mjs"
   },
   "scripts": {

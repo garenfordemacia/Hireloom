@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hireloom installer (built on the career-ops engine)
+# Hireloom installer
 #
 # Usage:
 #   bash install.sh                 # interactive (asks docker vs local)

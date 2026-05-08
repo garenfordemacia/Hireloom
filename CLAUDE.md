@@ -1,12 +1,12 @@
-# Hireloom -- Career Atelier (built on the career-ops engine)
+# Hireloom -- Career Atelier
 
 > *heir + loom · a quiet career atelier*
 
-The user-facing brand is **Hireloom**. The npm package and CLI bin are still
-`career-ops` — that's the engine name. Treat the dashboard wordmark, page
-titles, and human-facing surfaces as Hireloom; treat invocations like
-`/career-ops scan`, `node career-ops`, and the GitHub repo URL as the engine.
-This dual-naming is intentional, like a make-and-model relationship.
+This is **Hireloom** end-to-end — the brand, the npm package (`hireloom`),
+the CLI bin (`hireloom` with `career-ops` retained as a backwards-compat
+alias), the EXE, and the dashboard. The slash commands (`/career-ops scan`,
+etc.) keep their legacy names for muscle-memory and so existing automations
+don't break, but everything human-facing reads as Hireloom.
 
 ## Origin
 

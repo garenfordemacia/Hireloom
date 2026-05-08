@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 /**
- * career-ops launcher — wraps the dashboard server with a few niceties:
+ * Hireloom launcher — wraps the dashboard server with a few niceties:
  *
  *   - Auto-detects free port if 4747 is busy
  *   - Opens the default browser to the dashboard
  *   - Initializes a project directory in ~/CareerOps if cwd has no project
+ *     (legacy path retained — existing users have data there; new
+ *     installs migrate seamlessly because the loader checks both)
  *   - Forwards SIGINT/SIGTERM to the spawned server
  *
- * This is the entrypoint baked into career-ops.exe (Node SEA).
+ * This is the entrypoint baked into hireloom.exe (Node SEA).
  */
 
 import { spawn } from 'node:child_process';
@@ -50,7 +52,7 @@ async function initFreshProject() {
   if (!existsSync(readme)) {
     const fs = await import('node:fs/promises');
     await fs.writeFile(readme,
-      'Career-Ops user data directory.\n\n' +
+      'Hireloom user data directory.\n\n' +
       'For a full install, clone:\n' +
       '  git clone https://github.com/santifer/career-ops.git\n' +
       'Or run:\n' +
@@ -91,9 +93,9 @@ function openBrowser(url) {
 async function main() {
   let root = findProjectRoot();
   if (!root) {
-    console.log('\n⚠ No Career-Ops project found in cwd or near the executable.');
+    console.log('\n⚠ No Hireloom project found in cwd or near the executable.');
     console.log('   Either:');
-    console.log('     • cd into your career-ops checkout, then run again, or');
+    console.log('     • cd into your Hireloom checkout, then run again, or');
     console.log('     • git clone https://github.com/santifer/career-ops.git\n');
     process.exit(2);
   }
