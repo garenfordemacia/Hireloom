@@ -34,6 +34,12 @@ Members helping newcomers in Discord day-to-day.
 - **@systemsyogi** — Support and onboarding
 - **@nafterg** — Community organization suggestions, Discord structure
 
+## Forks & Adaptations
+
+Community members maintaining their own adaptations of the project.
+
+- **[@Garenfordemacia](https://github.com/Garenfordemacia)** (Maxime Fevet · [LinkedIn](https://www.linkedin.com/in/maxime-fevet)) — Maintains a personal fork. Added an **Obsidian + Dataview integration** (YAML frontmatter on evaluation reports feeding a live `Pipeline-Dashboard.md`) and retuned the portal scanner for **sales-engineering / enterprise account-executive** roles.
+
 ## How to become a contributor
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Contributor Ladder](GOVERNANCE.md#contributor-ladder) in GOVERNANCE.md. Open an issue first for anything beyond a typo fix — we merge fast when scope is clear.

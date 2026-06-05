@@ -308,7 +308,11 @@ Got hired using career-ops? [Share your story!](https://github.com/santifer/care
 
 ## License
 
-MIT
+MIT — © Santiago Fernández de Valderrama. See [LICENSE](LICENSE).
+
+## This Fork
+
+This is a personal fork maintained by **Maxime Fevet** ([LinkedIn](https://www.linkedin.com/in/maxime-fevet) · [@Garenfordemacia](https://github.com/Garenfordemacia)). It is **not** a re-authoring of the project — all credit for the original engine goes to the author above. This fork adds an **Obsidian + Dataview** dashboard integration and retunes the portal scanner for sales-engineering / enterprise account-executive roles. See [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Let's Connect
 

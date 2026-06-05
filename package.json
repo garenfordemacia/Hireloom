@@ -12,8 +12,8 @@
     "career-ops": "dashboard-web/server.mjs"
   },
   "scripts": {
-    "start": "node dashboard-web/server.mjs",
-    "dev": "node --watch dashboard-web/server.mjs",
+    "start": "node --env-file-if-exists=.env dashboard-web/server.mjs",
+    "dev": "node --env-file-if-exists=.env --watch dashboard-web/server.mjs",
     "preview": "PORT=4749 HOST=127.0.0.1 CONFIG_DIR=./tmp/preview-config DATA_DIR=./tmp/preview-data node dashboard-web/server.mjs",
     "doctor": "node doctor.mjs",
     "doctor:env": "bash install.sh --doctor",
@@ -49,6 +49,9 @@
     "automation"
   ],
   "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
+  "contributors": [
+    "Maxime Fevet (https://www.linkedin.com/in/maxime-fevet)"
+  ],
   "homepage": "https://santifer.io",
   "repository": {
     "type": "git",

@@ -133,5 +133,8 @@ batch/.js-prompt-*.md
 batch/jobseeker.pid
 batch/tracker-additions/merged/
 batch/tmp/
+
+# Obsidian vault config + community plugin binaries (personal, machine-local)
+.obsidian/
 # (literal E + U+F03A, the Win32 encoding of the colon when E:/ leaks into a repo)
 E/

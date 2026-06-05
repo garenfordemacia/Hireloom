@@ -156,12 +156,33 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 **Formato del report:**
 
+> **IMPORTANTE (Obsidian/Dataview):** Todo report DEBE empezar con un bloque de
+> frontmatter YAML. Es lo que alimenta el `Pipeline-Dashboard.md`. Usa números
+> puros para `score` (ej: `4.2`, no `4.2/5`) y un `status` canónico de
+> `templates/states.yml` (Evaluated, Applied, Responded, Interview, Offer,
+> Rejected, Discarded, SKIP).
+
 ```markdown
+---
+company: "{Empresa}"
+role: "{Rol}"
+score: {X.X}
+status: Evaluated
+date: {YYYY-MM-DD}
+archetype: "{detectado}"
+legitimacy: "{High Confidence | Proceed with Caution | Suspicious}"
+url: "{url de la oferta}"
+comp: "{rango o pendiente}"
+pdf: "{ruta o pendiente}"
+tags: [evaluation]
+---
+
 # Evaluación: {Empresa} — {Rol}
 
 **Fecha:** {YYYY-MM-DD}
 **Arquetipo:** {detectado}
 **Score:** {X/5}
+**URL:** {url de la oferta}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **PDF:** {ruta o pendiente}
 
