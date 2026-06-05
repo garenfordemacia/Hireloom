@@ -260,7 +260,7 @@ async function callKimi(system, user, maxTokens = 2000) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: 'moonshot-v1-128k',
+      model: process.env.KIMI_MODEL || 'moonshot-v1-128k',
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
       temperature: 0.1,
       max_tokens: maxTokens,
