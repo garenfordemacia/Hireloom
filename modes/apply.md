@@ -57,6 +57,26 @@ Identify ALL visible questions:
 Classify each question:
 - **Already answered in Section G** → adapt the existing response
 - **New question** → generate response from the report + cv.md
+- **Voluntary self-identification / demographic** → see the mandatory rule below
+
+### Demographic & voluntary self-identification fields (MANDATORY)
+
+**NEVER guess, infer, or auto-detect a candidate's gender, race/ethnicity, veteran
+status, disability status, sexual orientation, or pronouns** — not from their name,
+photo, CV, or any other signal. Inferring these is inaccurate, harmful, and not yours
+to decide.
+
+For ANY field about gender, race/ethnicity, Hispanic/Latino origin, veteran status,
+disability status, sexual orientation, or pronouns:
+
+1. **Read `config/profile.yml` → `eeo_voluntary`** and use the candidate's stored values
+   verbatim. These fields are legally voluntary and cannot be held against the candidate.
+2. If a value is missing from `eeo_voluntary`, **default to the decline option** present
+   on the form ("Decline to self-identify", "Prefer not to say", "I do not wish to answer",
+   "I am not a protected veteran" / "I don't wish to answer" for veteran/disability).
+3. **Never** select a concrete demographic value the candidate has not explicitly provided.
+4. When presenting responses, label these clearly (e.g. `[voluntary — declined per your profile]`)
+   so the candidate can change them by hand if they choose to. The default is always decline.
 
 ## Step 5 — Generate responses
 

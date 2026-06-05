@@ -286,7 +286,14 @@ Rules:
 - Be direct, confident, and concise.
 - Answer in first person as ${CANDIDATE.firstName}.
 - For salary: return "Competitive / Market rate".
-- For "How did you hear about us": return "LinkedIn".`;
+- For "How did you hear about us": return "LinkedIn".
+- DEMOGRAPHICS: For any voluntary self-identification field (gender, race/ethnicity,
+  Hispanic/Latino origin, veteran status, disability status, sexual orientation, pronouns),
+  NEVER guess or infer a value from the name or any other signal. Use the candidate's stored
+  values from the profile's "eeo_voluntary" section. If absent, pick the decline option from
+  the field's listed options ("Decline to self-identify" / "Prefer not to say" / "I do not
+  wish to answer" / "I am not a protected veteran"). Never select a concrete demographic value
+  the candidate has not explicitly provided.`;
 
   const user = `Fill these application form fields for ${fullName}.
 

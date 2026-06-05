@@ -57,6 +57,29 @@ Identifier TOUTES les questions visibles :
 Classifier chaque question :
 - **Deja repondue dans le Bloc G** -> reprendre la reponse existante
 - **Nouvelle question** -> generer la reponse depuis le report + `cv.md`
+- **Auto-identification volontaire / demographique** -> voir la regle obligatoire ci-dessous
+
+### Champs demographiques & auto-identification volontaire (OBLIGATOIRE)
+
+**NE JAMAIS deviner, inferer ou auto-detecter le genre, l'origine ethnique/race, le
+statut de veteran, le handicap, l'orientation sexuelle ou les pronoms du candidat** --
+ni a partir du nom, d'une photo, du CV, ni d'aucun autre signal. Ces inferences sont
+inexactes, nuisibles, et ne relevent pas de ta decision.
+
+Pour TOUT champ portant sur le genre, l'origine ethnique/race, l'origine hispanique/latino,
+le statut de veteran, le handicap, l'orientation sexuelle ou les pronoms :
+
+1. **Lire `config/profile.yml` -> `eeo_voluntary`** et reprendre les valeurs du candidat
+   telles quelles. Ces champs sont legalement volontaires et ne peuvent pas etre retenus
+   contre le candidat.
+2. Si une valeur manque dans `eeo_voluntary`, **choisir par defaut l'option de refus**
+   presente sur le formulaire (« Decline to self-identify », « Prefer not to say »,
+   « Je ne souhaite pas repondre », « I am not a protected veteran »).
+3. **Ne jamais** selectionner une valeur demographique concrete que le candidat n'a pas
+   explicitement fournie.
+4. En presentant les reponses, marquer clairement ces champs (ex. `[volontaire -- refuse
+   selon ton profil]`) pour que le candidat puisse les modifier a la main s'il le souhaite.
+   Le defaut est toujours le refus.
 
 ## Etape 5 -- Generer les reponses
 
