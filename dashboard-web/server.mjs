@@ -369,8 +369,8 @@ function parsePipelineUrls(content) {
   let inPending = false, inProcessed = false;
   for (const line of content.split('\n')) {
     const t = line.trim();
-    if (t === '## Pending') { inPending = true; inProcessed = false; continue; }
-    if (t === '## Processed') { inPending = false; inProcessed = true; continue; }
+    if (t === '## Pending' || t === '## Pendientes') { inPending = true; inProcessed = false; continue; }
+    if (t === '## Processed' || t === '## Procesadas') { inPending = false; inProcessed = true; continue; }
     if (t.startsWith('## ')) { inPending = false; inProcessed = false; continue; }
     const m = t.match(/^-\s*\[(x| )\]\s*(https?:\/\/\S+)/i);
     if (!m) continue;
