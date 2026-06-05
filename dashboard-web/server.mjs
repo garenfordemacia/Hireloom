@@ -372,9 +372,17 @@ function parsePipelineUrls(content) {
     if (t === '## Pending' || t === '## Pendientes') { inPending = true; inProcessed = false; continue; }
     if (t === '## Processed' || t === '## Procesadas') { inPending = false; inProcessed = true; continue; }
     if (t.startsWith('## ')) { inPending = false; inProcessed = false; continue; }
-    const m = t.match(/^-\s*\[(x| )\]\s*(https?:\/\/\S+)/i);
+    const m = t.match(/^-\s*\[(x| )\]\s*(https?:\/\/\S+)\s*(.*)$/i);
     if (!m) continue;
-    const item = { url: m[2], done: m[1].toLowerCase() === 'x' };
+    // Capture the optional "| Company | Role" suffix the scanner writes.
+    const rest = (m[3] || '').replace(/^\|?\s*/, '');
+    const parts = rest.split('|').map(s => s.trim()).filter(Boolean);
+    const item = {
+      url: m[2],
+      done: m[1].toLowerCase() === 'x',
+      company: parts[0] || '',
+      role: parts[1] || '',
+    };
     if (inPending) pending.push(item); else if (inProcessed) processed.push(item);
   }
   return { pending, processed };
@@ -871,6 +879,76 @@ let autopilotState = {
 const AUTOPILOT_LOG_FILE = path.join(DATA_DIR, 'autopilot-log.json');
 // Apps that need manual apply (CAPTCHA, no-form, Ashby, etc.) — persists across restarts
 const AUTOPILOT_MANUAL_FILE = path.join(DATA_DIR, 'autopilot-manual.json');
+// Audit trail of EVERY field the autopilot injects, so a human can review what
+// was actually filled into each application form (name, email, resume file,
+// and any custom-question answers). Append-only, capped at 200 entries.
+const AUTOPILOT_FIELDS_LOG = path.join(DATA_DIR, 'autopilot-fields-log.json');
+
+async function appendFillLog(entry) {
+  try {
+    let arr = [];
+    try { arr = JSON.parse(await fs.readFile(AUTOPILOT_FIELDS_LOG, 'utf8')); } catch {}
+    if (!Array.isArray(arr)) arr = [];
+    arr.push({ ts: new Date().toISOString(), ...entry });
+    if (arr.length > 200) arr = arr.slice(-200);
+    await fs.writeFile(AUTOPILOT_FIELDS_LOG, JSON.stringify(arr, null, 2), 'utf8');
+  } catch {}
+}
+
+// Read back the FINAL state of the form straight from the DOM — every visible,
+// labelled input/textarea/select and the value it actually holds right before
+// the user reviews and submits. This is the source of truth (unlike per-phase
+// fill decisions, which later phases may overwrite). Empty required fields are
+// flagged so we can warn the user about blanks.
+async function readBackFields(page) {
+  try {
+    return await page.evaluate(() => {
+      const out = [];
+      const labelFor = (el) =>
+        (el.id ? document.querySelector(`label[for="${el.id}"]`)?.textContent?.trim() : '')
+        || el.closest('[class*="field"],[class*="question"],[class*="form-group"],[class*="row"]')?.querySelector('label')?.textContent?.trim()
+        || el.getAttribute('aria-label')?.trim()
+        || el.placeholder?.trim()
+        || el.name || '';
+      document.querySelectorAll('input, textarea, select').forEach((el) => {
+        const type = (el.type || el.tagName).toLowerCase();
+        if (['hidden', 'submit', 'button', 'image', 'reset'].includes(type)) return;
+        if (el.offsetParent === null && type !== 'select-one') return; // not visible
+        const label = labelFor(el);
+        if (!label || label.length < 3) return;
+        let value = '';
+        if (type === 'file') {
+          value = el.files && el.files.length ? `[file: ${el.files[0].name}]` : '';
+        } else if (type === 'checkbox' || type === 'radio') {
+          value = el.checked ? 'checked' : '';
+        } else if (el.tagName === 'SELECT') {
+          value = el.options[el.selectedIndex]?.text?.trim() || '';
+        } else {
+          value = (el.value || '').trim();
+        }
+        const required = el.required || el.getAttribute('aria-required') === 'true' || /\*/.test(label);
+        out.push({ label: label.replace(/\s+/g, ' ').substring(0, 120), value: value.substring(0, 300), required });
+      });
+      // De-dupe by label, keep first non-empty value
+      const byLabel = new Map();
+      for (const f of out) {
+        const prev = byLabel.get(f.label);
+        if (!prev || (!prev.value && f.value)) byLabel.set(f.label, f);
+      }
+      return [...byLabel.values()];
+    });
+  } catch { return []; }
+}
+
+// Resolve which resume file the autopilot would upload, and whether it's the
+// raw markdown fallback (a red flag — means no real PDF was found).
+async function resolveResumeForLog() {
+  const cvPdf = path.join(ROOT, 'output', 'cv.pdf');
+  const cvMd = path.join(ROOT, 'cv.md');
+  try { await fs.access(cvPdf); return { path: cvPdf, isMarkdown: false }; } catch {}
+  try { await fs.access(cvMd); return { path: cvMd, isMarkdown: true }; } catch {}
+  return { path: null, isMarkdown: false };
+}
 
 async function loadManualSkips() {
   try {
@@ -1650,11 +1728,26 @@ async function fillGenericForm(page, profile) {
     }
   } catch {}
 
+  const _resume = await resolveResumeForLog();
+  const _final = await readBackFields(page);
+  await appendFillLog({
+    ats: 'generic', url: page.url().split('?')[0], submitted: false,
+    identity: {
+      full_name: profile.full_name, email: profile.email, phone: profile.phone,
+      linkedin: profile.linkedin, location: profile.location,
+    },
+    resume: _resume.path ? path.basename(_resume.path) : null,
+    resume_is_markdown: _resume.isMarkdown,
+    blanks_required: _final.filter(f => f.required && !f.value).map(f => f.label),
+    final_fields: _final,
+    custom_qa: [],
+  });
   return filled;
 }
 
 async function fillGreenhouseForm(page, profile) {
   let filled = false;
+  const loggedQA = [];
   const tryFill = async (selector, value) => {
     if (!value) return;
     try {
@@ -1727,9 +1820,10 @@ async function fillGreenhouseForm(page, profile) {
     else if (t.includes('interview') && t.includes('before')) answer = 'No.';
     // How did you hear — leave blank by default; this answer is application-specific
     else if (t.includes('how did you') || t.includes('where did you') || t.includes('hear about') || t.includes('source')) answer = null;
-    // Work address / based in / currently located — use profile.location or skip
+    // Work address / based in / currently located / where are you located — use profile.location or skip
     else if (t.includes('address') || (t.includes('where') && t.includes('work')) || (t.includes('plan') && t.includes('work'))
-             || t.includes('based in') || t.includes('currently based') || t.includes('currently located') || t.includes('currently live')) {
+             || t.includes('based in') || t.includes('currently based') || t.includes('currently located') || t.includes('currently live')
+             || t.includes('located') || t.includes('where are you') || (t.includes('where') && t.includes('live'))) {
       answer = profile.location || null;
     }
     // Office / hybrid (broader match)
@@ -1738,8 +1832,9 @@ async function fillGreenhouseForm(page, profile) {
     else if ((t.includes('describe') || t.includes('driven') || t.includes('experience')) && (t.includes('adoption') || t.includes('customer') || t.includes('technical') || t.includes('complex') || t.includes('expansion') || t.includes('upsell'))) answer = composeAchievement(profile);
     // Salary expectations
     else if (t.includes('salary') || t.includes('compensation') || t.includes('pay expectation') || t.includes('total comp')) answer = composeSalary(profile);
-    // How are you using AI / AI experiment
-    else if (t.includes('using ai') || t.includes('ai today') || t.includes('ai experiment') || t.includes('last ai')) answer = composeAiExperiment(profile);
+    // How are you using AI / AI tools / AI experiment
+    else if (t.includes('using ai') || t.includes('ai today') || t.includes('ai experiment') || t.includes('last ai')
+             || (t.includes('ai') && (t.includes('tool') || t.includes('how are you using') || t.includes('using them')))) answer = composeAiExperiment(profile);
     // Specific example / STAR format questions → best_achievement
     else if (t.includes('specific example') || t.includes('tell us about a time') || t.includes('give an example') || t.includes('describe a situation')) answer = composeAchievement(profile);
     // Country-based eligibility / where are you based — derive from profile.location
@@ -1765,6 +1860,8 @@ async function fillGreenhouseForm(page, profile) {
     }
     // Optional fields without a match: skip
     else answer = null;
+
+    loggedQA.push({ q: q.text, a: answer });
 
     if (answer && q.id) {
       if (q.tag === 'TEXTAREA') {
@@ -2243,7 +2340,8 @@ async function fillGreenhouseForm(page, profile) {
   for (const ta of emptyTextareas) {
     const t = ta.text.toLowerCase();
     let ans = null;
-    if (t.includes('using ai') || t.includes('ai today') || t.includes('ai experiment') || t.includes('last ai')) ans = aiAnswer;
+    if (t.includes('using ai') || t.includes('ai today') || t.includes('ai experiment') || t.includes('last ai')
+        || (t.includes('ai') && (t.includes('tool') || t.includes('how are you using') || t.includes('using them')))) ans = aiAnswer;
     else if (t.includes('driven') || t.includes('adoption') || t.includes('expansion') || t.includes('upsell') || t.includes('post-sale') || t.includes('post sale') || t.includes('aar') || t.includes('$500k') || t.includes('500k')) ans = experienceAnswer;
     else if (t.includes('salary') || t.includes('compensation') || t.includes('expectation')) ans = composeSalary(profile);
     else if (t.includes('notice') || t.includes('available to start') || t.includes('when can you start') || t.includes('start date')) ans = 'Immediately / 2 weeks notice.';
@@ -2293,7 +2391,7 @@ async function fillGreenhouseForm(page, profile) {
     if (t.includes('salary') || t.includes('compensation') || t.includes('expectation') || t.includes('pay')) {
       ans = profile.target_range ? `${profile.target_range}${profile.currency ? ' ' + profile.currency : ''} (flexible on structure)` : null;
     }
-    else if (t.includes('city') || (t.includes('location') && !t.includes('relocation') && !t.includes('remote') && !t.includes('where'))) ans = profile.location || null;
+    else if (t.includes('city') || t.includes('located') || t.includes('where are you') || (t.includes('location') && !t.includes('relocation') && !t.includes('remote'))) ans = profile.location || null;
     else if (t.includes('linkedin')) ans = profile.linkedin || null;
     else if (t.includes('notice') || t.includes('available to start') || t.includes('when can you start') || t.includes('start date')) ans = 'Immediately / 2 weeks notice';
     else if (t.includes('why') || t.includes('motivation')) ans = composeMotivation(profile);
@@ -2381,6 +2479,20 @@ async function fillGreenhouseForm(page, profile) {
     }
   } catch {}
 
+  const _resume = await resolveResumeForLog();
+  const _final = await readBackFields(page);
+  await appendFillLog({
+    ats: 'greenhouse', url: page.url().split('?')[0], submitted: false,
+    identity: {
+      full_name: profile.full_name, email: profile.email, phone: profile.phone,
+      linkedin: profile.linkedin, location: profile.location,
+    },
+    resume: _resume.path ? path.basename(_resume.path) : null,
+    resume_is_markdown: _resume.isMarkdown,
+    blanks_required: _final.filter(f => f.required && !f.value).map(f => f.label),
+    final_fields: _final,
+    custom_qa: loggedQA,
+  });
   return filled;
 }
 
@@ -2411,6 +2523,20 @@ async function fillLeverForm(page, profile) {
       if (await fileInput.count() > 0) { await fileInput.setInputFiles(resumePath); filled = true; }
     }
   } catch {}
+  const _resume = await resolveResumeForLog();
+  const _final = await readBackFields(page);
+  await appendFillLog({
+    ats: 'lever', url: page.url().split('?')[0], submitted: false,
+    identity: {
+      full_name: profile.full_name, email: profile.email, phone: profile.phone,
+      linkedin: profile.linkedin, location: profile.location,
+    },
+    resume: _resume.path ? path.basename(_resume.path) : null,
+    resume_is_markdown: _resume.isMarkdown,
+    blanks_required: _final.filter(f => f.required && !f.value).map(f => f.label),
+    final_fields: _final,
+    custom_qa: [],
+  });
   return filled;
 }
 
@@ -2440,6 +2566,20 @@ async function fillAshbyForm(page, profile) {
       if (await fileInput.count() > 0) { await fileInput.setInputFiles(resumePath); filled = true; }
     }
   } catch {}
+  const _resume = await resolveResumeForLog();
+  const _final = await readBackFields(page);
+  await appendFillLog({
+    ats: 'ashby', url: page.url().split('?')[0], submitted: false,
+    identity: {
+      full_name: profile.full_name, email: profile.email, phone: profile.phone,
+      linkedin: profile.linkedin, location: profile.location,
+    },
+    resume: _resume.path ? path.basename(_resume.path) : null,
+    resume_is_markdown: _resume.isMarkdown,
+    blanks_required: _final.filter(f => f.required && !f.value).map(f => f.label),
+    final_fields: _final,
+    custom_qa: [],
+  });
   return filled;
 }
 
@@ -5243,6 +5383,7 @@ const HTML = /* html */ `<!DOCTYPE html>
 <script>
   /* ── State ── */
   let allApps = [];
+  let allPipeline = [];
   let currentFilter = 'all';
   let searchQuery = '';
   let sortField = 'date';
@@ -5393,6 +5534,34 @@ const HTML = /* html */ `<!DOCTYPE html>
     }).join('');
   }
 
+  /* ── Render pipeline offers into the main table (un-evaluated URLs) ── */
+  function renderPipelineTable(items) {
+    const tbody = document.getElementById('apps-tbody');
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="empty-icon">◔</div>' +
+        '<div class="empty-title">Pipeline is empty</div>' +
+        '<div class="empty-sub">Run <code>/career-ops scan</code> or add URLs to <code>data/pipeline.md</code>.</div></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map((p, i) => {
+      const company = p.company || (() => { try { return new URL(p.url).hostname.replace(/^www\\./,'').split('.')[0]; } catch { return '—'; } })();
+      const role = p.role || '—';
+      const openBtn = '<a class="btn-row-open" href="' + esc(p.url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Open job posting in new tab">↗ Open</a>';
+      return '<tr onclick="window.open(\\'' + esc(p.url) + '\\',\\'_blank\\',\\'noopener\\')" style="cursor:pointer">' +
+        '<td class="td-num">' + (i + 1) + '</td>' +
+        '<td><div class="td-company"><div class="company-avatar">' + avatarLetter(company) + '</div>' + esc(company) + '</div></td>' +
+        '<td class="td-role">' + esc(role) + '</td>' +
+        '<td><span class="status-badge ' + statusClass('pending') + '">Pending</span></td>' +
+        '<td>—</td>' +
+        '<td>—</td>' +
+        '<td class="td-date">—</td>' +
+        '<td>—</td>' +
+        '<td class="td-notes" style="opacity:.6">' + esc(p.url) + '</td>' +
+        '<td class="td-actions">' + openBtn + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
   /* ── Open job URL in new tab (fetches URL from report) ── */
   async function openJobUrl(num, btn) {
     if (btn) btn.classList.add('disabled');
@@ -5447,10 +5616,23 @@ const HTML = /* html */ `<!DOCTYPE html>
 
   function applyFilter() {
     searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+    // Pipeline is a different kind of row (un-evaluated URLs, no score/status),
+    // so it gets its own renderer in the main table instead of the apps list.
+    if (currentFilter === 'pipeline') {
+      let items = allPipeline;
+      if (searchQuery) {
+        items = items.filter(p =>
+          (p.company||'').toLowerCase().includes(searchQuery) ||
+          (p.role||'').toLowerCase().includes(searchQuery) ||
+          (p.url||'').toLowerCase().includes(searchQuery));
+      }
+      document.getElementById('apps-count') && (document.getElementById('apps-count').textContent = items.length + ' in pipeline');
+      renderPipelineTable(items);
+      return;
+    }
     let filtered = allApps;
     if (currentFilter === 'followup')      filtered = filtered.filter(a => a.needsFollowUp);
     else if (currentFilter === 'high-paying') filtered = filtered.filter(a => a.highPaying);
-    else if (currentFilter === 'pipeline') filtered = filtered; // shown in sidebar
     else if (currentFilter !== 'all')      filtered = filtered.filter(a => a.status === currentFilter);
     if (searchQuery) {
       filtered = filtered.filter(a =>
@@ -7148,6 +7330,7 @@ const HTML = /* html */ `<!DOCTYPE html>
       const res = await fetch('/api/data');
       const data = await res.json();
       allApps = data.applications;
+      allPipeline = ((data.pipeline && data.pipeline.pending) || []).filter(p => !p.done);
       renderStats(data.stats);
       updateApplyBanner(data.applications);
       applyFilter();
@@ -7745,6 +7928,16 @@ async function handleRequest(req, res) {
       startedAt: autopilotState.startedAt,
       log: autopilotState.log.slice(-50),
     }));
+    return;
+  }
+
+  // ── API: Field-level audit log (what each form was actually filled with) ──
+  if (pathname === '/api/autopilot/fields') {
+    let arr = [];
+    try { arr = JSON.parse(await fs.readFile(AUTOPILOT_FIELDS_LOG, 'utf8')); } catch {}
+    if (!Array.isArray(arr)) arr = [];
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ count: arr.length, entries: arr.slice(-50) }));
     return;
   }
 
