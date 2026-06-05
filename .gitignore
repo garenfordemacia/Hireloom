@@ -136,5 +136,10 @@ batch/tmp/
 
 # Obsidian vault config + community plugin binaries (personal, machine-local)
 .obsidian/
+
+# Automated-scan logs and tracker backups (machine-local)
+data/scan-cron.log
+data/launchd-scan.*.log
+data/*.bak-*
 # (literal E + U+F03A, the Win32 encoding of the colon when E:/ leaks into a repo)
 E/

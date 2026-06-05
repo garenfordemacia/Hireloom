@@ -134,6 +134,29 @@ function buildTitleFilter(titleFilter) {
   };
 }
 
+// ── Location filter (optional, backwards-compatible) ────────────────
+// Activates only when `location_filter` exists in portals.yml. Keeps an
+// offer when its location matches a `positive` keyword and no `negative`
+// one. Offers with an empty/unknown location are kept (some APIs omit it).
+
+function buildLocationFilter(locationFilter) {
+  const positive = (locationFilter?.positive || []).map(k => k.toLowerCase());
+  const negative = (locationFilter?.negative || []).map(k => k.toLowerCase());
+
+  // No config → no-op (preserves default behaviour for everyone else)
+  if (positive.length === 0 && negative.length === 0) return () => true;
+
+  return (location, title = '') => {
+    // Negatives apply to BOTH the structured location AND the title, since
+    // many boards bury the city/region in the title (e.g. "AE, Chicago").
+    const hay = `${location} ${title}`.toLowerCase();
+    if (negative.some(k => hay.includes(k))) return false;
+    if (!location) return true; // unknown location, no negative hit → keep
+    const loc = location.toLowerCase();
+    return positive.length === 0 || positive.some(k => loc.includes(k));
+  };
+}
+
 // ── Dedup ───────────────────────────────────────────────────────────
 
 function loadSeenUrls() {
@@ -264,6 +287,7 @@ async function main() {
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
 
   // 2. Filter to enabled companies with detectable APIs
   const targets = companies
@@ -285,6 +309,7 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
   let totalFiltered = 0;
+  let totalFilteredLoc = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [];
@@ -299,6 +324,10 @@ async function main() {
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
           totalFiltered++;
+          continue;
+        }
+        if (!locationFilter(job.location, job.title)) {
+          totalFilteredLoc++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -335,6 +364,7 @@ async function main() {
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by location:  ${totalFilteredLoc} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
